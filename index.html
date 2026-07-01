@@ -29,7 +29,8 @@
   @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
   .kpi{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:18px;position:relative;overflow:hidden}
   .kpi .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-  .kpi .val{font-size:26px;font-weight:800;margin-top:6px;color:var(--green)}
+  .kpi{display:flex;flex-direction:column;justify-content:space-between}
+  .kpi .val{font-size:22px;font-weight:800;margin-top:8px;color:var(--green);white-space:nowrap}
   .kpi .val.orange{color:var(--orange-d)}
   .kpi::after{display:none}
   .cols{grid-template-columns:1fr 1fr}
@@ -88,8 +89,8 @@
   </header>
 
   <div class="tabs">
-    <div class="tab active" data-t="perf">📊 Performance</div>
-    <div class="tab" data-t="rel">📈 Relatório</div>
+    <div class="tab active" data-t="perf">📊 Análise</div>
+    <div class="tab" data-t="rel">📈 Dashboard</div>
     <div class="tab" data-t="plano">🚀 Planejamento</div>
     <div class="tab" data-t="plan">💰 Plano de Verba</div>
   </div>
@@ -114,8 +115,6 @@
           <div class="legend">
             <div class="lgrow"><div class="l"><span class="sw" style="background:#1b5540"></span>Meta Ads</div><div><b>R$ 247,8k</b> · 68%</div></div>
             <div class="lgrow"><div class="l"><span class="sw" style="background:#F07A1F"></span>Google Ads</div><div><b>R$ 118,8k</b> · 32%</div></div>
-            <div class="lgrow"><div class="l">Faturamento</div><div><b>R$ 1,51 mi</b></div></div>
-            <div class="lgrow"><div class="l">ROAS</div><div><span class="badge b-good">6,08x</span></div></div>
           </div>
         </div>
       </div>
@@ -318,8 +317,8 @@ new Chart(document.getElementById('splitChart'),{type:'doughnut',data:{labels:['
 const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const hMes=['Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 new Chart(document.getElementById('monthChart'),{data:{labels:hMes,datasets:[
-  {type:'bar',label:'Faturamento',data:[36881,214581,107201,88838,390246,109693,96953,228247,199667,34631],backgroundColor:'#1b5540',borderRadius:6,yAxisID:'y'},
-  {type:'line',label:'ROAS',data:[6.06,7.20,3.45,3.68,9.53,5.71,4.41,7.14,7.78,2.04],borderColor:'#F07A1F',backgroundColor:'#F07A1F',borderWidth:3,tension:.35,pointRadius:4,yAxisID:'y1'}]},
+  {type:'bar',label:'Faturamento',data:[36881,214581,107201,88838,390246,109693,96953,228247,199667,34631],backgroundColor:'#1b5540',borderRadius:6,yAxisID:'y',order:1},
+  {type:'line',label:'ROAS',data:[6.06,7.20,3.45,3.68,9.53,5.71,4.41,7.14,7.78,2.04],borderColor:'#F07A1F',backgroundColor:'#F07A1F',borderWidth:3,tension:.35,pointRadius:4,yAxisID:'y1',order:0}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{y:{position:'left',ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'x'}}}}});
 new Chart(document.getElementById('gbarChart'),{type:'bar',data:{labels:g.map(x=>x.n),datasets:[{data:g.map(x=>x.inv),backgroundColor:'#F07A1F',borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y:{grid:{display:false}}}}});
 const steps=[{n:'Cliques',v:241358},{n:'Visitas site',v:98574},{n:'Add carrinho',v:47150},{n:'Checkout',v:4031},{n:'Vendas',v:8482}];
