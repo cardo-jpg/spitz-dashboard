@@ -458,7 +458,8 @@ function relatorio(){
   // Google por campanha
   document.getElementById('rl-gcamp').innerHTML=Object.entries(camp).sort((a,b)=>b[1][0]-a[1][0]).map(([c,a])=>{
     const cpa=a[3]?a[0]/a[3]:0, ctr=a[1]?a[2]/a[1]*100:0;
-    return `<tr><td class="name">${c}</td><td>${BRL(a[0])}</td><td>${a[3].toLocaleString('pt-BR')}</td><td>${BRL(cpa)}</td><td>${ctr.toFixed(1)}%</td></tr>`;
+    const cc=cpa<=20?'b-good':cpa<=35?'b-mid':'b-bad';
+    return `<tr><td class="name">${c}</td><td>${BRL(a[0])}</td><td>${a[3].toLocaleString('pt-BR')}</td><td><span class="badge ${cc}">${BRL(cpa)}</span></td><td>${ctr.toFixed(1)}%</td></tr>`;
   }).join('');
   // Google diario
   const gd=Object.entries(gday);
@@ -470,7 +471,7 @@ function relatorio(){
   const mxv=st[0][1]||1;
   document.getElementById('rl-funnel').innerHTML=st.map((s,i)=>{const w=Math.max(8,s[1]/mxv*100);const c=i>0&&st[i-1][1]?((s[1]/st[i-1][1])*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s[0]}</div><div class="fbar" style="width:${w}%;background:${FCOL[i]}">${s[1].toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
   // tabela Meta
-  document.getElementById('rl-tbody').innerHTML=md.map(r=>`<tr><td class="name">${r[0]}</td><td>${BRL(r[1])}</td><td>${r[3].toLocaleString('pt-BR')}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td>${BRL(r[8])}</td><td>${(r[1]?r[8]/r[1]:0).toFixed(2)}x</td></tr>`).join('');
+  document.getElementById('rl-tbody').innerHTML=md.map(r=>{const roas=r[1]?r[8]/r[1]:0;const rc=roas>=5?'b-good':roas>=3?'b-mid':'b-bad';return `<tr><td class="name">${r[0]}</td><td>${BRL(r[1])}</td><td>${r[3].toLocaleString('pt-BR')}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td style="color:var(--green);font-weight:700">${BRL(r[8])}</td><td><span class="badge ${rc}">${roas.toFixed(2)}x</span></td></tr>`;}).join('');
 }
 rsel.onchange=relatorio; relatorio();
 </script>
