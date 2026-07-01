@@ -27,7 +27,10 @@
   .grid{display:grid;gap:16px;margin-top:16px}
   .kpis{grid-template-columns:repeat(6,1fr)}
   @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
-  .kpi{background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:18px;position:relative;overflow:hidden}
+  .kpi{background:var(--card);border:1px solid var(--ring);border-top:3px solid var(--orange);border-radius:16px;padding:18px;position:relative;overflow:hidden}
+  .grid.kpis .kpi:nth-child(3n+1){border-top-color:var(--green2)}
+  .grid.kpis .kpi:nth-child(3n+2){border-top-color:var(--orange)}
+  .grid.kpis .kpi:nth-child(3n+3){border-top-color:#2e7d5b}
   .kpi .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .kpi{display:flex;flex-direction:column;justify-content:space-between}
   .kpi .val{font-size:22px;font-weight:800;margin-top:8px;color:var(--green);white-space:nowrap}
@@ -53,11 +56,11 @@
   .lgrow:last-child{border:none}
   .lgrow .l{display:flex;align-items:center;gap:8px;font-weight:700}
   .sw{width:12px;height:12px;border-radius:4px}
-  .funnel{display:flex;flex-direction:column;gap:8px}
-  .fstep{display:flex;align-items:center;gap:12px}
-  .fstep .fbar{height:34px;border-radius:8px;background:linear-gradient(90deg,var(--orange),var(--orange-d));display:flex;align-items:center;padding:0 12px;color:#fff;font-weight:700;font-size:13px;min-width:60px}
-  .fstep .fmeta{font-size:12px;color:var(--muted)}
-  .fstep .fname{width:120px;font-size:13px;font-weight:700;color:var(--green)}
+  .funnel{display:flex;flex-direction:column;gap:10px}
+  .fstep{display:grid;grid-template-columns:105px 1fr 50px;align-items:center;gap:12px}
+  .fstep .fbar{height:34px;border-radius:8px;display:flex;align-items:center;padding:0 12px;color:#fff;font-weight:700;font-size:13px;min-width:50px;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+  .fstep .fmeta{font-size:12px;color:var(--muted);font-weight:700;text-align:left}
+  .fstep .fname{font-size:13px;font-weight:700;color:var(--green)}
   footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px;padding:16px}
   .note{background:#fff;border:1px dashed var(--ring);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--muted);margin-top:16px}
   .full{grid-column:1/-1}
@@ -213,6 +216,7 @@
           <div class="ctl"><label>Teto (R$)</label><input id="c-teto" type="number" value="60000" step="1000"></div>
           <div class="ctl"><label>Antecipação (%)</label><input id="c-ant" type="number" value="30" step="5"></div>
           <div class="ctl"><label>Split Meta (%)</label><input id="c-split" type="number" value="67" step="1"></div>
+          <button class="btn" id="c-save">💾 Salvar</button>
           <button class="btn ghost" id="c-reset">↺ Zerar eventos</button>
         </div>
         <table class="plan-table" style="margin-top:14px">
@@ -320,10 +324,12 @@ new Chart(document.getElementById('monthChart'),{data:{labels:hMes,datasets:[
   {type:'bar',label:'Faturamento',data:[36881,214581,107201,88838,390246,109693,96953,228247,199667,34631],backgroundColor:'#1b5540',borderRadius:6,yAxisID:'y',order:1},
   {type:'line',label:'ROAS',data:[6.06,7.20,3.45,3.68,9.53,5.71,4.41,7.14,7.78,2.04],borderColor:'#F07A1F',backgroundColor:'#F07A1F',borderWidth:3,tension:.35,pointRadius:4,yAxisID:'y1',order:0}]},
   options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{y:{position:'left',ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'x'}}}}});
-new Chart(document.getElementById('gbarChart'),{type:'bar',data:{labels:g.map(x=>x.n),datasets:[{data:g.map(x=>x.inv),backgroundColor:'#F07A1F',borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y:{grid:{display:false}}}}});
+const GCOL=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f','#b45f0a'];
+new Chart(document.getElementById('gbarChart'),{type:'bar',data:{labels:g.map(x=>x.n),datasets:[{data:g.map(x=>x.inv),backgroundColor:GCOL,borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y:{grid:{display:false}}}}});
+const FCOL=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f'];
 const steps=[{n:'Cliques',v:241358},{n:'Visitas site',v:98574},{n:'Add carrinho',v:47150},{n:'Checkout',v:4031},{n:'Vendas',v:8482}];
 const mx=steps[0].v;
-document.getElementById('funnel').innerHTML=steps.map((s,i)=>{const w=Math.max(8,(s.v/mx)*100);const c=i>0?((s.v/steps[i-1].v)*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s.n}</div><div class="fbar" style="width:${w}%">${s.v.toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
+document.getElementById('funnel').innerHTML=steps.map((s,i)=>{const w=Math.max(8,(s.v/mx)*100);const c=i>0?((s.v/steps[i-1].v)*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s.n}</div><div class="fbar" style="width:${w}%;background:${FCOL[i]}">${s.v.toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
 
 /* ============ PLANO DE VERBA (editável) ============ */
 const LS='spitz_plano_v1';
@@ -387,7 +393,11 @@ function update(){
   else planChart=new Chart(document.getElementById('planChart'),{type:'bar',data,options:{maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}}}}});
 }
 const f_base=document.getElementById('f-base'),f_ev=document.getElementById('f-ev'),f_ant=document.getElementById('f-ant'),f_tot=document.getElementById('f-tot'),f_meta=document.getElementById('f-meta'),f_goog=document.getElementById('f-goog');
-['c-base','c-teto','c-ant','c-split'].forEach(id=>document.getElementById(id).oninput=update);
+const LScfg='spitz_plano_cfg_v1';
+function saveCfg(){localStorage.setItem(LScfg,JSON.stringify({base:document.getElementById('c-base').value,teto:document.getElementById('c-teto').value,ant:document.getElementById('c-ant').value,split:document.getElementById('c-split').value}));}
+(function loadCfg(){const c=JSON.parse(localStorage.getItem(LScfg)||'null');if(!c)return;['base','teto','ant','split'].forEach(k=>{if(c[k]!=null&&c[k]!=='')document.getElementById('c-'+k).value=c[k];});})();
+['c-base','c-teto','c-ant','c-split'].forEach(id=>document.getElementById(id).oninput=()=>{saveCfg();update();});
+document.getElementById('c-save').onclick=()=>{localStorage.setItem(LS,JSON.stringify(eventos));saveCfg();const b=document.getElementById('c-save');b.textContent='✓ Salvo!';b.style.background='#1a7a4c';setTimeout(()=>{b.textContent='💾 Salvar';b.style.background='';},1600);};
 document.getElementById('c-reset').onclick=()=>{eventos=Array(12).fill(0);localStorage.setItem(LS,JSON.stringify(eventos));buildRows();update();};
 buildRows(); update();
 
@@ -458,7 +468,7 @@ function relatorio(){
   // funil
   const st=[['Cliques',S.clk],['Visitas',S.vis],['Carrinho',S.atc],['Checkout',S.chk],['Vendas',S.vd]];
   const mxv=st[0][1]||1;
-  document.getElementById('rl-funnel').innerHTML=st.map((s,i)=>{const w=Math.max(8,s[1]/mxv*100);const c=i>0&&st[i-1][1]?((s[1]/st[i-1][1])*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s[0]}</div><div class="fbar" style="width:${w}%">${s[1].toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
+  document.getElementById('rl-funnel').innerHTML=st.map((s,i)=>{const w=Math.max(8,s[1]/mxv*100);const c=i>0&&st[i-1][1]?((s[1]/st[i-1][1])*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s[0]}</div><div class="fbar" style="width:${w}%;background:${FCOL[i]}">${s[1].toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
   // tabela Meta
   document.getElementById('rl-tbody').innerHTML=md.map(r=>`<tr><td class="name">${r[0]}</td><td>${BRL(r[1])}</td><td>${r[3].toLocaleString('pt-BR')}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td>${BRL(r[8])}</td><td>${(r[1]?r[8]/r[1]:0).toFixed(2)}x</td></tr>`).join('');
 }
