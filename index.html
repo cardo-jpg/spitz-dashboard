@@ -88,18 +88,18 @@
         <div class="sub">Meta Ads + Google Ads · Performance & Planejamento</div>
       </div>
     </div>
-    <div class="period">📅 Histórico: 26/03–26/12/2025</div>
+    <div class="period">🟢 Campanha ativa · Julho 2026</div>
   </header>
 
   <div class="tabs">
-    <div class="tab active" data-t="perf">📊 Análise</div>
-    <div class="tab" data-t="rel">📈 Dashboard</div>
+    <div class="tab" data-t="perf">📊 Análise</div>
+    <div class="tab active" data-t="rel">📈 Dashboard</div>
     <div class="tab" data-t="plano">🚀 Planejamento</div>
     <div class="tab" data-t="plan">💰 Plano de Verba</div>
   </div>
 
   <!-- ================= PERFORMANCE ================= -->
-  <div class="pane active" id="perf">
+  <div class="pane" id="perf">
     <div class="grid kpis">
       <div class="kpi"><div class="lbl">Investimento total</div><div class="val">R$ 366,6 mil</div></div>
       <div class="kpi"><div class="lbl">Faturamento</div><div class="val orange">R$ 1,51 mi</div></div>
@@ -154,7 +154,7 @@
   </div>
 
   <!-- ================= RELATÓRIO (dados diários) ================= -->
-  <div class="pane" id="rel">
+  <div class="pane active" id="rel">
     <div class="grid"><div class="card full">
       <h2>Relatório de campanhas <span class="tag">dados diários</span></h2>
       <div class="hint">Números reais das campanhas, dia a dia. Selecione o período.</div>
@@ -180,7 +180,7 @@
       </div>
     </div>
 
-    <div class="grid"><div class="card full">
+    <div class="grid" id="card-gday"><div class="card full">
       <h2>Google — investimento/dia</h2><div class="hint">Gasto diário no Search</div>
       <div class="chart-box"><canvas id="relGChart"></canvas></div>
     </div></div>
@@ -295,7 +295,7 @@
   <footer>Cardô Marketing · Dashboard Spitz Pomer · Performance · Planejamento · Plano de Verba</footer>
 </div>
 
-<script src="data.js?v=2"></script>
+<script src="data.js?v=3"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const kBRL = n => 'R$ '+(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
@@ -428,9 +428,12 @@ document.getElementById('pl-split').oninput=planejar;
 planejar();
 
 /* ============ RELATÓRIO (dados diários) ============ */
-const RMES={'03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
+const RMES={'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
 const rsel=document.getElementById('rl-mes');
-rsel.innerHTML='<option value="all">Todo o período</option>'+Object.keys(RMES).map(m=>`<option value="${m}">${RMES[m]} / 2025</option>`).join('');
+// Constroi o seletor a partir dos meses que existem no METAD (cresce sozinho quando adicionar mais meses)
+const mesesSP=[...new Set(METAD.map(r=>r[0].slice(3,5)))].sort();
+rsel.innerHTML=(mesesSP.length>1?'<option value="all">Todo o período</option>':'')+mesesSP.map(m=>`<option value="${m}">${RMES[m]} / ${DASH_ANO}</option>`).join('');
+if(mesesSP.length) rsel.value=mesesSP[mesesSP.length-1];
 let relC,relG;
 const tipMoney={callbacks:{label:c=>c.dataset.label+': '+BRL(c.parsed.y)}};
 function relatorio(){
@@ -440,10 +443,11 @@ function relatorio(){
   const S=md.reduce((a,r)=>{a.inv+=r[1];a.imp+=r[2];a.clk+=r[3];a.vis+=r[4];a.atc+=r[5];a.chk+=r[6];a.vd+=r[7];a.fat+=r[8];return a;},{inv:0,imp:0,clk:0,vis:0,atc:0,chk:0,vd:0,fat:0});
   const camp={}, gday={}; let gInv=0,gConv=0;
   gc.forEach(r=>{const [d,c,inv,imp,clk,cv]=r; const a=camp[c]||(camp[c]=[0,0,0,0]); a[0]+=inv;a[1]+=imp;a[2]+=clk;a[3]+=cv; gInv+=inv;gConv+=cv; gday[d]=(gday[d]||0)+inv;});
-  const roas=S.inv?S.fat/S.inv:0, cpaM=S.vd?S.inv/S.vd:0;
+  const roas=S.inv?S.fat/S.inv:0, cpaM=S.vd?S.inv/S.vd:0, ticket=S.vd?S.fat/S.vd:0;
+  const temGoogle=gc.length>0;
   document.getElementById('rl-kpis').innerHTML=[
-    ['Investimento total',BRL(S.inv+gInv)],['Faturamento',BRL(S.fat)],['ROAS (Meta)',roas.toFixed(2)+'x'],
-    ['Vendas (Meta)',S.vd.toLocaleString('pt-BR')],['Conversões (Google)',gConv.toLocaleString('pt-BR')],['CPA (Meta)',BRL(cpaM)]
+    ['Investimento'+(temGoogle?' total':''),BRL(S.inv+gInv)],['Faturamento',BRL(S.fat)],['ROAS',roas.toFixed(2)+'x'],
+    ['Vendas',S.vd.toLocaleString('pt-BR')],['Ticket médio',BRL(ticket)],['CPA',BRL(cpaM)]
   ].map(k=>`<div class="kpi"><div class="lbl">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
   // Faturamento (barras, eixo esq) x Investimento (linha na frente, eixo dir)
   const dC={labels:md.map(r=>r[0]),datasets:[
@@ -455,17 +459,23 @@ function relatorio(){
       y:{position:'left',beginAtZero:true,ticks:{callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'},grid:{color:'#eef2f0'}},
       y1:{position:'right',beginAtZero:true,grid:{display:false},ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')}}}};
   if(relC){relC.data=dC;relC.options=oC;relC.update();}else relC=new Chart(document.getElementById('relChart'),{data:dC,options:oC});
-  // Google por campanha
-  document.getElementById('rl-gcamp').innerHTML=Object.entries(camp).sort((a,b)=>b[1][0]-a[1][0]).map(([c,a])=>{
-    const cpa=a[3]?a[0]/a[3]:0, ctr=a[1]?a[2]/a[1]*100:0;
-    const cc=cpa<=20?'b-good':cpa<=35?'b-mid':'b-bad';
-    return `<tr><td class="name">${c}</td><td>${BRL(a[0])}</td><td>${a[3].toLocaleString('pt-BR')}</td><td><span class="badge ${cc}">${BRL(cpa)}</span></td><td>${ctr.toFixed(1)}%</td></tr>`;
-  }).join('');
-  // Google diario
-  const gd=Object.entries(gday);
-  const dG={labels:gd.map(x=>x[0]),datasets:[{label:'Investimento Google',data:gd.map(x=>Math.round(x[1])),backgroundColor:'#F07A1F',borderRadius:2}]};
-  const oG={maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tipMoney},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},y:{beginAtZero:true,ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')},grid:{color:'#eef2f0'}}}};
-  if(relG){relG.data=dG;relG.options=oG;relG.update();}else relG=new Chart(document.getElementById('relGChart'),{type:'bar',data:dG,options:oG});
+  // Google por campanha (estado vazio quando a fonte de Google ainda nao foi atualizada)
+  const cardGday=document.getElementById('card-gday');
+  if(temGoogle){
+    cardGday.style.display='';
+    document.getElementById('rl-gcamp').innerHTML=Object.entries(camp).sort((a,b)=>b[1][0]-a[1][0]).map(([c,a])=>{
+      const cpa=a[3]?a[0]/a[3]:0, ctr=a[1]?a[2]/a[1]*100:0;
+      const cc=cpa<=20?'b-good':cpa<=35?'b-mid':'b-bad';
+      return `<tr><td class="name">${c}</td><td>${BRL(a[0])}</td><td>${a[3].toLocaleString('pt-BR')}</td><td><span class="badge ${cc}">${BRL(cpa)}</span></td><td>${ctr.toFixed(1)}%</td></tr>`;
+    }).join('');
+    const gd=Object.entries(gday);
+    const dG={labels:gd.map(x=>x[0]),datasets:[{label:'Investimento Google',data:gd.map(x=>Math.round(x[1])),backgroundColor:'#F07A1F',borderRadius:2}]};
+    const oG={maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tipMoney},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:12}},y:{beginAtZero:true,ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')},grid:{color:'#eef2f0'}}}};
+    if(relG){relG.data=dG;relG.options=oG;relG.update();}else relG=new Chart(document.getElementById('relGChart'),{type:'bar',data:dG,options:oG});
+  } else {
+    document.getElementById('rl-gcamp').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:22px">📊 Dados do Google entram assim que a fonte for atualizada.</td></tr>';
+    cardGday.style.display='none';
+  }
   // funil
   const st=[['Cliques',S.clk],['Visitas',S.vis],['Carrinho',S.atc],['Checkout',S.chk],['Vendas',S.vd]];
   const mxv=st[0][1]||1;
