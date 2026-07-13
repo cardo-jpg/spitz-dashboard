@@ -345,7 +345,7 @@
   <footer>Cardô Marketing · Dashboard Spitz Pomer · Performance · Planejamento · Plano de Verba</footer>
 </div>
 
-<script src="data.js?v=5"></script>
+<script src="data.js?v=6"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const kBRL = n => 'R$ '+(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
@@ -573,7 +573,7 @@ const colsPub=[
  ['ROAS',r=>`<td ${heatRoas(r[10])}>${r[10]}x</td>`,r=>r[10]]
 ];
 const colsCria=[
- ['Criativo',r=>`<td class="name">${r[0]}</td>`,r=>r[0]],
+ ['Criativo',r=>`<td class="name">${r[12]?`<a href="${r[12]}" target="_blank" rel="noopener" style="color:var(--orange-d);text-decoration:underline">${r[0]} ↗</a>`:r[0]}</td>`,r=>r[0]],
  ['Investido',r=>`<td>${BRL(r[1])}</td>`,r=>r[1]],
  ['Cliques',r=>`<td>${fmtN(r[2])}</td>`,r=>r[2]],
  ['CPC',r=>`<td>${BRL(r[3])}</td>`,r=>r[3]],
