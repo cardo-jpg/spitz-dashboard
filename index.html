@@ -76,6 +76,9 @@
   .efstep .efcost{display:flex;gap:7px;flex-wrap:wrap}
   .efstep .efcost .pill2{background:#f4f7f5;border:1px solid var(--ring);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--green);font-weight:800;white-space:nowrap}
   .efstep .efcost .pill2 small{display:block;font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .tblwrap{max-height:470px;overflow:auto;border:1px solid var(--ring);border-radius:12px}
+  .tblwrap table{font-size:12px}
+  .tblwrap thead th{position:sticky;top:0;background:var(--card);z-index:1;box-shadow:0 1px 0 var(--ring)}
   footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px;padding:16px}
   .note{background:#fff;border:1px dashed var(--ring);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--muted);margin-top:16px}
   .full{grid-column:1/-1}
@@ -206,24 +209,22 @@
     </div></div>
 
     <div class="grid"><div class="card full">
-      <h2>Campanhas <span class="tag">snapshot jul 1–12</span></h2>
+      <h2>Campanhas <span class="tag">filtra por data</span></h2>
       <div class="hint">Clique no cabeçalho para ordenar. Heatmap em Custo/venda e ROAS.</div>
-      <div style="overflow-x:auto"><table><thead id="th-camp"></thead><tbody id="tb-camp"></tbody></table></div>
+      <div class="tblwrap"><table><thead id="th-camp"></thead><tbody id="tb-camp"></tbody></table></div>
     </div></div>
 
     <div class="grid"><div class="card full">
-      <h2>Públicos <span class="tag">snapshot jul 1–12</span></h2>
+      <h2>Públicos <span class="tag">filtra por data</span></h2>
       <div class="hint">Clique no cabeçalho para ordenar.</div>
-      <div style="overflow-x:auto"><table><thead id="th-pub"></thead><tbody id="tb-pub"></tbody></table></div>
+      <div class="tblwrap"><table><thead id="th-pub"></thead><tbody id="tb-pub"></tbody></table></div>
     </div></div>
 
     <div class="grid"><div class="card full">
-      <h2>Criativos <span class="tag">snapshot jul 1–12</span></h2>
-      <div class="hint">Clique no cabeçalho para ordenar.</div>
-      <div style="overflow-x:auto"><table><thead id="th-cria"></thead><tbody id="tb-cria"></tbody></table></div>
+      <h2>Criativos <span class="tag">clique pra abrir o anúncio ↗</span></h2>
+      <div class="hint">Clique no <b>nome do criativo</b> para abrir o anúncio no Instagram. Cabeçalho ordena.</div>
+      <div class="tblwrap"><table><thead id="th-cria"></thead><tbody id="tb-cria"></tbody></table></div>
     </div></div>
-
-    <div class="note">📸 As três tabelas acima são o <b>recorte do período (jul 1–12)</b> transcrito do Looker — por isso ainda <b>não respondem ao filtro de data</b>. Quando você me passar o export diário granular, elas passam a filtrar por dia igual ao topo.</div>
   </div>
 
   <!-- ================= RECONHECIMENTO / MARCA ================= -->
@@ -345,7 +346,8 @@
   <footer>Cardô Marketing · Dashboard Spitz Pomer · Performance · Planejamento · Plano de Verba</footer>
 </div>
 
-<script src="data.js?v=6"></script>
+<script src="data.js?v=7"></script>
+<script src="meta_granular.js?v=1"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const kBRL = n => 'R$ '+(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
@@ -530,10 +532,10 @@ function relatorio(){
   if(relC){relC.data=dC;relC.options=oC;relC.update();}else relC=new Chart(document.getElementById('relChart'),{data:dC,options:oC});
   // Tabela diaria
   document.getElementById('rl-tbody').innerHTML=md.map(r=>{const rr=r[1]?r[8]/r[1]:0;const rc=rr>=5?'b-good':rr>=3?'b-mid':'b-bad';return `<tr><td class="name">${r[0]}</td><td>${BRL(r[1])}</td><td>${r[3].toLocaleString('pt-BR')}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td style="color:var(--green);font-weight:700">${BRL(r[8])}</td><td><span class="badge ${rc}">${rr.toFixed(2)}x</span></td></tr>`;}).join('');
+  if(typeof renderTabelas==='function') renderTabelas(de,ate);
 }
 rDe.onchange=relatorio; rAte.onchange=relatorio;
 document.getElementById('rl-tudo').onclick=()=>{rDe.value=minISO;rAte.value=maxISO;relatorio();};
-relatorio();
 
 /* ============ TABELAS GRANULARES (snapshot) + ABA MARCA ============ */
 const fmtN=n=>n.toLocaleString('pt-BR');
@@ -547,48 +549,40 @@ function tabela(thId,tbId,rows,cols,st){
   tb.innerHTML=rr.map(r=>'<tr>'+cols.map(c=>c[1](r)).join('')+'</tr>').join('');
   th.querySelectorAll('th').forEach(h=>h.onclick=()=>{const i=+h.dataset.i;st.dir=(st.i===i?-st.dir:-1);st.i=i;tabela(thId,tbId,rows,cols,st);});
 }
-const colsCamp=[
- ['Campanha',r=>`<td class="name">${r[0]}</td>`,r=>r[0]],
- ['Investido',r=>`<td>${BRL(r[1])}</td>`,r=>r[1]],
- ['Cliques',r=>`<td>${fmtN(r[2])}</td>`,r=>r[2]],
- ['CPC',r=>`<td>${BRL(r[3])}</td>`,r=>r[3]],
- ['CTR',r=>`<td>${pctBR(r[4])}</td>`,r=>r[4]],
- ['Carrinho',r=>`<td>${r[5]}</td>`,r=>r[5]],
- ['Checkout',r=>`<td>${r[6]}</td>`,r=>r[6]],
- ['Vendas',r=>`<td>${r[7]}</td>`,r=>r[7]],
- ['Custo/venda',r=>`<td ${heatCpv(r[8])}>${BRL(r[8])}</td>`,r=>r[8]],
- ['ROAS',r=>`<td ${heatRoas(r[9])}>${r[9]}x</td>`,r=>r[9]]
+// Agrega os dados diarios granulares por entidade no intervalo [de, ate]
+function aggEntity(rows,de,ate){
+  const m={};
+  for(const r of rows){const i=toISO(r[0]); if(i<de||i>ate) continue; let a=m[r[1]]; if(!a) a=m[r[1]]=[0,0,0,0,0,0,0]; a[0]+=r[2];a[1]+=r[3];a[2]+=r[4];a[3]+=r[5];a[4]+=r[6];a[5]+=r[7];a[6]+=r[8];}
+  return Object.keys(m).map(name=>{const a=m[name],inv=a[0],imp=a[1],clk=a[2],add=a[3],chk=a[4],vd=a[5],fat=a[6];return {name,inv,imp,clk,add,chk,vd,fat,cpc:clk?inv/clk:0,ctr:imp?clk/imp*100:0,cpv:vd?inv/vd:0,roas:inv?fat/inv:0,ticket:vd?fat/vd:0};});
+}
+const colMetric=[
+ ['Investido',o=>`<td>${BRL(o.inv)}</td>`,o=>o.inv],
+ ['Cliques',o=>`<td>${fmtN(o.clk)}</td>`,o=>o.clk],
+ ['CPC',o=>`<td>${o.clk?BRL(o.cpc):'—'}</td>`,o=>o.cpc],
+ ['CTR',o=>`<td>${pctBR(o.ctr)}</td>`,o=>o.ctr],
+ ['Carrinho',o=>`<td>${o.add}</td>`,o=>o.add],
+ ['Checkout',o=>`<td>${o.chk}</td>`,o=>o.chk],
+ ['Vendas',o=>`<td>${o.vd}</td>`,o=>o.vd]
 ];
-const colsPub=[
- ['Público',r=>`<td class="name">${r[0]}</td>`,r=>r[0]],
- ['Investido',r=>`<td>${BRL(r[1])}</td>`,r=>r[1]],
- ['Cliques',r=>`<td>${fmtN(r[2])}</td>`,r=>r[2]],
- ['CPC',r=>`<td>${BRL(r[3])}</td>`,r=>r[3]],
- ['CTR',r=>`<td>${pctBR(r[4])}</td>`,r=>r[4]],
- ['Carrinho',r=>`<td>${r[5]}</td>`,r=>r[5]],
- ['Checkout',r=>`<td>${r[6]}</td>`,r=>r[6]],
- ['Vendas',r=>`<td>${r[7]}</td>`,r=>r[7]],
- ['Custo/venda',r=>`<td ${heatCpv(r[8])}>${BRL(r[8])}</td>`,r=>r[8]],
- ['Faturamento',r=>`<td style="color:var(--green);font-weight:700">${BRL(r[9])}</td>`,r=>r[9]],
- ['ROAS',r=>`<td ${heatRoas(r[10])}>${r[10]}x</td>`,r=>r[10]]
+const colTail=[
+ ['Custo/venda',o=>`<td ${o.vd?heatCpv(o.cpv):''}>${o.vd?BRL(o.cpv):'—'}</td>`,o=>o.cpv],
+ ['Faturamento',o=>`<td style="color:var(--green);font-weight:700">${BRL(o.fat)}</td>`,o=>o.fat],
+ ['ROAS',o=>`<td ${heatRoas(o.roas)}>${o.roas.toFixed(1)}x</td>`,o=>o.roas]
 ];
-const colsCria=[
- ['Criativo',r=>`<td class="name">${r[12]?`<a href="${r[12]}" target="_blank" rel="noopener" style="color:var(--orange-d);text-decoration:underline">${r[0]} ↗</a>`:r[0]}</td>`,r=>r[0]],
- ['Investido',r=>`<td>${BRL(r[1])}</td>`,r=>r[1]],
- ['Cliques',r=>`<td>${fmtN(r[2])}</td>`,r=>r[2]],
- ['CPC',r=>`<td>${BRL(r[3])}</td>`,r=>r[3]],
- ['CTR',r=>`<td>${pctBR(r[4])}</td>`,r=>r[4]],
- ['Carrinho',r=>`<td>${r[5]}</td>`,r=>r[5]],
- ['Checkout',r=>`<td>${r[6]}</td>`,r=>r[6]],
- ['Vendas',r=>`<td>${r[7]}</td>`,r=>r[7]],
- ['Ticket',r=>`<td>${BRL(r[8])}</td>`,r=>r[8]],
- ['Custo/venda',r=>`<td ${heatCpv(r[9])}>${BRL(r[9])}</td>`,r=>r[9]],
- ['Faturamento',r=>`<td style="color:var(--green);font-weight:700">${BRL(r[10])}</td>`,r=>r[10]],
- ['ROAS',r=>`<td ${heatRoas(r[11])}>${r[11]}x</td>`,r=>r[11]]
+const cCamp=[['Campanha',o=>`<td class="name">${o.name}</td>`,o=>o.name],...colMetric,...colTail];
+const cPub=[['Público',o=>`<td class="name">${o.name}</td>`,o=>o.name],...colMetric,...colTail];
+const cCria=[
+ ['Criativo',o=>`<td class="name">${CRIA_URL[o.name]?`<a href="${CRIA_URL[o.name]}" target="_blank" rel="noopener" style="color:var(--orange-d);text-decoration:underline">${o.name} ↗</a>`:o.name}</td>`,o=>o.name],
+ ...colMetric,
+ ['Ticket',o=>`<td>${o.vd?BRL(o.ticket):'—'}</td>`,o=>o.ticket],
+ ...colTail
 ];
-tabela('th-camp','tb-camp',CAMP,colsCamp,{i:9,dir:-1});
-tabela('th-pub','tb-pub',PUB,colsPub,{i:10,dir:-1});
-tabela('th-cria','tb-cria',CRIA,colsCria,{i:11,dir:-1});
+const stCamp={i:1,dir:-1},stPub={i:1,dir:-1},stCria={i:1,dir:-1};
+function renderTabelas(de,ate){
+  tabela('th-camp','tb-camp',aggEntity(CAMPD,de,ate),cCamp,stCamp);
+  tabela('th-pub','tb-pub',aggEntity(PUBD,de,ate),cPub,stPub);
+  tabela('th-cria','tb-cria',aggEntity(CRIAD,de,ate),cCria,stCria);
+}
 
 // Aba Marca
 (function(){
@@ -605,6 +599,9 @@ tabela('th-cria','tb-cria',CRIA,colsCria,{i:11,dir:-1});
   document.getElementById('mk-seg').innerHTML=
     linha('Investimento',BRL(G.inv))+linha('Seguidores ganhos',fmtN(G.seguidores))+linha('Custo por seguidor',BRL(custoSeg))+linha('Cliques',fmtN(G.cliques))+linha('CTR',pctBR(G.ctr));
 })();
+
+// dispara o render inicial (agora que renderTabelas e as tabelas estao definidas)
+relatorio();
 </script>
 </body>
 </html>
