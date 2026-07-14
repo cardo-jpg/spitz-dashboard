@@ -278,7 +278,12 @@
   <div class="pane" id="marca">
     <div class="grid"><div class="card full">
       <h2>Campanhas de Marca <span class="tag">alcance · reconhecimento</span></h2>
-      <div class="hint">Avaliadas por <b>alcance, CPM e qualidade do criativo</b> — não por ROAS. <b>Hook Rate</b> = quantos foram fisgados nos primeiros segundos (3s ÷ impressões). <b>Retenção 75%</b> = dos fisgados, quantos assistiram até quase o fim.</div>
+      <div class="hint">Avaliadas por <b>alcance, CPM e qualidade do criativo</b> — não por ROAS. <b>Hook Rate</b> = fisgados nos 1ºs segundos (3s ÷ impressões). <b>Retenção 75%</b> = dos fisgados, quantos assistiram até quase o fim.</div>
+      <div class="controls">
+        <div class="ctl"><label>De</label><input type="date" id="mk-de"></div>
+        <div class="ctl"><label>Até</label><input type="date" id="mk-ate"></div>
+        <button class="btn ghost" id="mk-tudo">↺ Período todo</button>
+      </div>
     </div></div>
     <div class="grid"><div class="card full">
       <h2>🎯 Alcance <span class="tag" id="alc-tag"></span></h2>
@@ -399,7 +404,7 @@
 <script src="data.js?v=12"></script>
 <script src="meta_granular.js?v=6"></script>
 <script src="google_granular.js?v=4"></script>
-<script src="brand_granular.js?v=2"></script>
+<script src="brand_granular.js?v=3"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const BRL2 = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -686,8 +691,24 @@ function renderTabelas(de,ate){
     document.getElementById(sumId).innerHTML=`Investimento <b>${BRL(T.inv)}</b> · Impressões <b>${fmtN(T.imp)}</b> · Alcance <b>${fmtN(T.alc)}</b> · CPM <b>${BRL2(cpm)}</b> · Frequência <b>${freq.toFixed(2).replace('.',',')}</b> · Hook médio (vídeo) <b>${hookMed.toFixed(0)}%</b>`;
     tabela(thId,tbId,objs,cB,{i:1,dir:-1});
   }
-  render(BRANDALC,'th-alc','tb-alc','alc-sum','alc-tag');
-  render(BRANDREC,'th-rec','tb-rec','rec-sum','rec-tag');
+  // agrega o diario por criativo no intervalo [de,ate] (datas ISO aaaa-mm-dd)
+  function bAgg(rows,de,ate){
+    const m={};
+    for(const r of rows){ if(r[0]<de||r[0]>ate) continue; const nm=r[1]; let a=m[nm]; if(!a) a=m[nm]=[0,0,0,0,0,0,0,0,0]; for(let i=0;i<9;i++) a[i]+=r[i+2]; }
+    return Object.keys(m).map(nm=>[nm,...m[nm]]);
+  }
+  const mkDe=document.getElementById('mk-de'), mkAte=document.getElementById('mk-ate');
+  const bIso=[...BRANDALC,...BRANDREC].map(r=>r[0]).sort();
+  const bMin=bIso[0]||'', bMax=bIso[bIso.length-1]||'';
+  [mkDe,mkAte].forEach(i=>{i.min=bMin;i.max=bMax;}); mkDe.value=bMin; mkAte.value=bMax;
+  function renderMarca(){
+    const de=mkDe.value||bMin, ate=mkAte.value||bMax;
+    render(bAgg(BRANDALC,de,ate),'th-alc','tb-alc','alc-sum','alc-tag');
+    render(bAgg(BRANDREC,de,ate),'th-rec','tb-rec','rec-sum','rec-tag');
+  }
+  mkDe.onchange=renderMarca; mkAte.onchange=renderMarca;
+  document.getElementById('mk-tudo').onclick=()=>{mkDe.value=bMin;mkAte.value=bMax;renderMarca();};
+  renderMarca();
 })();
 
 /* ============ ABA GOOGLE ============ */

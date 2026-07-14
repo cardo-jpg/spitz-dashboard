@@ -111,28 +111,29 @@ print(f"GOOGLE camp {len(GCAMPD)} | kw {len(GKWD)} | loc {len(GLOCD)} | inv R${g
 # cols: 0Data(ISO aaaa-mm-dd) 1Camp 2Pub 3Cria 4URL 5Investido 6Impressoes 7Visualizacoes
 #       8Alcance 9Vis3s 10Interacoes 11:25% 12:75% 13Cliques 14VisitasPerfil
 VALIDISO = set(f"{d[6:10]}-{d[3:5]}-{d[0:2]}" for d in VALID)  # DD/MM/AAAA -> AAAA-MM-DD
-def brand_agg(tab):  # agrega por criativo, mantendo as abas SEPARADAS
+def brand_daily(tab):  # DIARIO por criativo (mantem a data ISO p/ filtrar), abas separadas
     ag = {}; ur = {}
     for r in fetch(tab)[1:]:
         if len(r) < 15 or not r[0] or r[0] not in VALIDISO: continue
         nm = r[3].strip()
         if not nm: continue
-        a = ag.setdefault(nm, [0.0]*9)  # inv,impr,alc,vis3s,inter,p25,p75,clk,visperfil
+        k = (r[0], nm)
+        a = ag.setdefault(k, [0.0]*9)  # inv,impr,alc,vis3s,inter,p25,p75,clk,visperfil
         for i, ci in enumerate((5,6,8,9,10,11,12,13,14)): a[i] += num(r[ci])
         if r[4].strip().startswith("http"): ur.setdefault(nm, r[4].strip())
-    arr = [[nm, round(v[0],2), int(v[1]), int(v[2]), int(v[3]), int(v[4]), int(v[5]), int(v[6]), int(v[7]), int(v[8])]
-           for nm, v in ag.items()]
+    arr = [[k[0], k[1], round(v[0],2), int(v[1]), int(v[2]), int(v[3]), int(v[4]), int(v[5]), int(v[6]), int(v[7]), int(v[8])]
+           for k, v in ag.items()]
     return arr, ur
-BRANDALC, ua = brand_agg("Meta Ads Alcance")
-BRANDREC, ureco = brand_agg(" Meta Ads Reconhecimento")
+BRANDALC, ua = brand_daily("Meta Ads Alcance")
+BRANDREC, ureco = brand_daily(" Meta Ads Reconhecimento")
 BRAND_URL = {**ua, **ureco}
-outb = "// ===== Marca por criativo, abas SEPARADAS (Alcance / Reconhecimento) =====\n"
-outb += "// [criativo, investido, impressoes, alcance, vis3s, interacoes, p25, p75, cliques, visitas_perfil]\n"
+outb = "// ===== Marca DIARIA por criativo, abas SEPARADAS (Alcance / Reconhecimento) =====\n"
+outb += "// [data(ISO), criativo, investido, impressoes, alcance, vis3s, interacoes, p25, p75, cliques, visitas_perfil]\n"
 outb += "const BRANDALC=" + json.dumps(BRANDALC, ensure_ascii=False) + ";\n"
 outb += "const BRANDREC=" + json.dumps(BRANDREC, ensure_ascii=False) + ";\n"
 outb += "const BRAND_URL=" + json.dumps(BRAND_URL, ensure_ascii=False) + ";\n"
 open(os.path.join(ROOT, "brand_granular.js"), "w", encoding="utf-8", newline="\n").write(outb)
-print(f"MARCA: Alcance {len(BRANDALC)} criativos (R${sum(x[1] for x in BRANDALC):,.2f}) | Reconhecimento {len(BRANDREC)} criativos (R${sum(x[1] for x in BRANDREC):,.2f})")
+print(f"MARCA: Alcance {len(set(x[1] for x in BRANDALC))} criativos | Reconhecimento {len(set(x[1] for x in BRANDREC))} criativos | linhas {len(BRANDALC)+len(BRANDREC)}")
 
 # ---------- grava data.js (so' o bloco METAD) ----------
 dj = open(os.path.join(ROOT, "data.js"), encoding="utf-8").read()
