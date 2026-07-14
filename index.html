@@ -215,8 +215,11 @@
     </div></div>
 
     <div class="grid"><div class="card full">
-      <h2>Campanhas <span class="tag">filtra por data</span></h2>
+      <h2>Campanhas <span class="tag">filtra por data e tipo</span></h2>
       <div class="hint">Clique no cabeçalho para ordenar. Heatmap em Custo/venda e ROAS.</div>
+      <div class="controls" style="margin-bottom:12px"><div class="ctl"><label>Tipo de campanha</label>
+        <select id="camp-tipo" style="width:230px;padding:9px 10px;border:1px solid var(--ring);border-radius:10px;font-size:14px;font-weight:700;color:var(--green)"></select>
+      </div></div>
       <div class="tblwrap"><table><thead id="th-camp"></thead><tbody id="tb-camp"></tbody></table></div>
     </div></div>
 
@@ -625,11 +628,36 @@ const cCria=[
  ...colTail
 ];
 const stCamp={i:1,dir:-1},stPub={i:1,dir:-1},stCria={i:1,dir:-1};
+function campTipo(n){n=(n||'').toLowerCase();
+  if(n.includes('vendas'))return'Vendas';
+  if(n.includes('lead'))return'Leads';
+  if(n.includes('reconhecimento'))return'Reconhecimento';
+  if(n.includes('alcance'))return'Alcance';
+  if(n.includes('engajamento'))return'Engajamento';
+  if(n.includes('consideracao')||n.includes('consideração')||n.includes('funil'))return'Consideração';
+  return'Outras';
+}
+function renderCampanhas(){
+  const de=rDe.value||minISO, ate=rAte.value||maxISO;
+  let camps=aggEntity(CAMPD,de,ate);
+  const tp=document.getElementById('camp-tipo').value;
+  if(tp) camps=camps.filter(o=>campTipo(o.name)===tp);
+  tabela('th-camp','tb-camp',camps,cCamp,stCamp);
+}
 function renderTabelas(de,ate){
-  tabela('th-camp','tb-camp',aggEntity(CAMPD,de,ate),cCamp,stCamp);
+  renderCampanhas();
   tabela('th-pub','tb-pub',aggEntity(PUBD,de,ate),cPub,stPub);
   tabela('th-cria','tb-cria',aggEntity(CRIAD,de,ate),cCria,stCria);
 }
+// popula o filtro de tipo de campanha (uma vez) na ordem: mais comuns primeiro
+(function(){
+  const ordem=['Vendas','Leads','Reconhecimento','Alcance','Engajamento','Consideração','Outras'];
+  const pres=new Set(aggEntity(CAMPD,minISO,maxISO).map(o=>campTipo(o.name)));
+  const tipos=ordem.filter(t=>pres.has(t));
+  const sel=document.getElementById('camp-tipo');
+  sel.innerHTML='<option value="">Todos os tipos</option>'+tipos.map(t=>`<option value="${t}">${t}</option>`).join('');
+  sel.onchange=renderCampanhas;
+})();
 
 // Aba Marca — abas SEPARADAS (Alcance / Reconhecimento), qualidade de criativo
 (function(){
