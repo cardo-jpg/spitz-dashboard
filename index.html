@@ -388,6 +388,7 @@
 <script src="google_granular.js?v=1"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
+const BRL2 = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const kBRL = n => 'R$ '+(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
 
 // ---- Tabs ----
@@ -535,7 +536,7 @@ function relatorio(){
   // KPIs (igual ao Looker)
   document.getElementById('rl-kpis').innerHTML=[
     ['Faturamento',BRL(S.fat)],['Ticket médio',BRL(ticket)],['Investimento',BRL(S.inv)],
-    ['Tx conversão',pct(txc)],['Vendas',S.vd.toLocaleString('pt-BR')],['Custo por venda',BRL(cpv)],['ROAS',roas.toFixed(2)+'x']
+    ['Tx conversão',pct(txc)],['Vendas',S.vd.toLocaleString('pt-BR')],['Custo por venda',BRL2(cpv)],['ROAS',roas.toFixed(2)+'x']
   ].map(k=>`<div class="kpi"><div class="lbl">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
   // Funil do e-commerce estilizado (conversao entre etapas + custo por etapa)
   const F=[
@@ -550,7 +551,7 @@ function relatorio(){
     <div class="efstep">
       <div class="efconv">${s.conv?`${pct(s.conv[1])}<small>${s.conv[0]}</small>`:''}</div>
       <div class="efbar" style="width:${s.w}%;background:${FC2[i]}"><b>${s.v.toLocaleString('pt-BR')}</b><span>${s.n}</span></div>
-      <div class="efcost">${s.cost.map(c=>`<div class="pill2">${BRL(c[1])}<small>${c[0]}</small></div>`).join('')}</div>
+      <div class="efcost">${s.cost.map(c=>`<div class="pill2">${BRL2(c[1])}<small>${c[0]}</small></div>`).join('')}</div>
     </div>`).join('');
   // Faturamento (barra) x metas de faturamento (inv x5 ideal / x3 minimo) que ACOMPANHAM o investimento
   const labels=md.map(r=>r[0]);
@@ -594,14 +595,14 @@ function aggEntity(rows,de,ate){
 const colMetric=[
  ['Investido',o=>`<td>${BRL(o.inv)}</td>`,o=>o.inv],
  ['Cliques',o=>`<td>${fmtN(o.clk)}</td>`,o=>o.clk],
- ['CPC',o=>`<td>${o.clk?BRL(o.cpc):'—'}</td>`,o=>o.cpc],
+ ['CPC',o=>`<td>${o.clk?BRL2(o.cpc):'—'}</td>`,o=>o.cpc],
  ['CTR',o=>`<td>${pctBR(o.ctr)}</td>`,o=>o.ctr],
  ['Carrinho',o=>`<td>${o.add}</td>`,o=>o.add],
  ['Checkout',o=>`<td>${o.chk}</td>`,o=>o.chk],
  ['Vendas',o=>`<td>${o.vd}</td>`,o=>o.vd]
 ];
 const colTail=[
- ['Custo/venda',o=>`<td ${o.vd?heatCpv(o.cpv):''}>${o.vd?BRL(o.cpv):'—'}</td>`,o=>o.cpv],
+ ['Custo/venda',o=>`<td ${o.vd?heatCpv(o.cpv):''}>${o.vd?BRL2(o.cpv):'—'}</td>`,o=>o.cpv],
  ['Faturamento',o=>`<td style="color:var(--green);font-weight:700">${BRL(o.fat)}</td>`,o=>o.fat],
  ['ROAS',o=>`<td ${heatRoas(o.roas)}>${o.roas.toFixed(1)}x</td>`,o=>o.roas]
 ];
@@ -610,7 +611,7 @@ const cPub=[['Público',o=>`<td class="name">${o.name}</td>`,o=>o.name],...colMe
 const cCria=[
  ['Criativo',o=>`<td class="name">${CRIA_URL[o.name]?`<a href="${CRIA_URL[o.name]}" target="_blank" rel="noopener" style="color:var(--orange-d);text-decoration:underline">${o.name} ↗</a>`:o.name}</td>`,o=>o.name],
  ...colMetric,
- ['Ticket',o=>`<td>${o.vd?BRL(o.ticket):'—'}</td>`,o=>o.ticket],
+ ['Ticket',o=>`<td>${o.vd?BRL2(o.ticket):'—'}</td>`,o=>o.ticket],
  ...colTail
 ];
 const stCamp={i:1,dir:-1},stPub={i:1,dir:-1},stCria={i:1,dir:-1};
@@ -650,16 +651,16 @@ const gMetric=[
  ['Investido',o=>`<td>${BRL(o.inv)}</td>`,o=>o.inv],
  ['Impr.',o=>`<td>${fmtN(o.imp)}</td>`,o=>o.imp],
  ['Cliques',o=>`<td>${fmtN(o.clk)}</td>`,o=>o.clk],
- ['CPC',o=>`<td>${o.clk?BRL(o.cpc):'—'}</td>`,o=>o.cpc],
+ ['CPC',o=>`<td>${o.clk?BRL2(o.cpc):'—'}</td>`,o=>o.cpc],
  ['CTR',o=>`<td>${pctBR(o.ctr)}</td>`,o=>o.ctr],
  ['Vendas',o=>`<td>${o.vd}</td>`,o=>o.vd],
- ['CPA',o=>`<td ${o.vd?heatCpv(o.cpa):''}>${o.vd?BRL(o.cpa):'—'}</td>`,o=>o.cpa],
+ ['CPA',o=>`<td ${o.vd?heatCpv(o.cpa):''}>${o.vd?BRL2(o.cpa):'—'}</td>`,o=>o.cpa],
  ['Faturamento',o=>`<td style="color:var(--green);font-weight:700">${BRL(o.fat)}</td>`,o=>o.fat],
  ['ROAS',o=>`<td ${heatRoas(o.roas)}>${o.roas.toFixed(1)}x</td>`,o=>o.roas]
 ];
 const gcCamp=[['Campanha',o=>`<td class="name">${o.name}</td>`,o=>o.name],...gMetric];
 const gcKw=[['Palavra-chave',o=>`<td class="name">${o.name}</td>`,o=>o.name],...gMetric];
-const gcLoc=[['Estado',o=>`<td class="name">${o.name}</td>`,o=>o.name],...gMetric];
+const gcLoc=[['Estado',o=>`<td class="name">${o.name.replace(/^State of /,'')}</td>`,o=>o.name],...gMetric];
 const stG={i:1,dir:-1},stGk={i:1,dir:-1},stGl={i:1,dir:-1};
 let gChart;
 function googleTab(){
@@ -669,7 +670,7 @@ function googleTab(){
   const roas=T.inv?T.fat/T.inv:0,cpa=T.vd?T.inv/T.vd:0,cpc=T.clk?T.inv/T.clk:0,ctr=T.imp?T.clk/T.imp*100:0;
   document.getElementById('g-kpis').innerHTML=[
     ['Investimento',BRL(T.inv)],['Faturamento',BRL(T.fat)],['ROAS',roas.toFixed(2)+'x'],
-    ['Vendas',fmtN(T.vd)],['CPA',BRL(cpa)],['CPC',BRL(cpc)],['CTR',pctBR(ctr)]
+    ['Vendas',fmtN(T.vd)],['CPA',BRL2(cpa)],['CPC',BRL2(cpc)],['CTR',pctBR(ctr)]
   ].map(k=>`<div class="kpi"><div class="lbl">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
   tabela('th-gcamp','tb-gcamp',googleAgg(GCAMPD,de,ate),gcCamp,stG);
   tabela('th-gkw','tb-gkw',googleAgg(GKWD,de,ate),gcKw,stGk);
