@@ -77,8 +77,13 @@
   .efstep .efcost .pill2{background:#f4f7f5;border:1px solid var(--ring);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--green);font-weight:800;white-space:nowrap}
   .efstep .efcost .pill2 small{display:block;font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
   .tblwrap{max-height:470px;overflow:auto;border:1px solid var(--ring);border-radius:12px}
-  .tblwrap table{font-size:12px}
-  .tblwrap thead th{position:sticky;top:0;background:var(--card);z-index:1;box-shadow:0 1px 0 var(--ring)}
+  .tblwrap table{font-size:12.5px}
+  .tblwrap td,.tblwrap th{white-space:nowrap;padding:11px 14px;border-bottom:1px solid #eef2f0}
+  .tblwrap thead th{position:sticky;top:0;background:var(--card);z-index:1;box-shadow:0 1px 0 var(--ring);font-size:10.5px}
+  .tblwrap tbody tr:nth-child(even){background:#faf8ef}
+  .tblwrap tbody tr:hover{background:#edf4ef}
+  .tblwrap tbody td{color:#6d7f75}
+  .tblwrap tbody td.name{color:var(--green);font-weight:700;white-space:normal;min-width:180px}
   footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px;padding:16px}
   .note{background:#fff;border:1px dashed var(--ring);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--muted);margin-top:16px}
   .full{grid-column:1/-1}
@@ -202,7 +207,7 @@
     <div class="grid"><div class="card full">
       <h2>Tabela diária — Meta</h2>
       <div class="hint">Role para ver todos os dias do período</div>
-      <div style="max-height:360px;overflow:auto;border:1px solid var(--ring);border-radius:12px">
+      <div class="tblwrap" style="max-height:360px">
         <table id="rl-table"><thead><tr>
           <th>Data</th><th>Invest.</th><th>Cliques</th><th>Carrinho</th><th>Checkout</th><th>Vendas</th><th>Faturamento</th><th>ROAS</th>
         </tr></thead><tbody id="rl-tbody"></tbody></table>
@@ -578,7 +583,7 @@ document.getElementById('rl-tudo').onclick=()=>{rDe.value=minISO;rAte.value=maxI
 /* ============ TABELAS GRANULARES (snapshot) + ABA MARCA ============ */
 const fmtN=n=>n.toLocaleString('pt-BR');
 const pctBR=n=>n.toFixed(2).replace('.',',')+'%';
-const heatRoas=v=>{const c=v>=8?'#bfe6cd':v>=5?'#dcf0e4':v>=3?'#fdeecb':'#f8d7d7';return `style="background:${c};font-weight:800;color:var(--green)"`;};
+const heatRoas=v=>{const c=v>=8?'#bfe6cd':v>=5?'#dcf0e4':v>=3?'#fdeecb':'#f8d7d7';return `style="background:${c};font-weight:800;color:var(--green);font-size:13.5px"`;};
 const heatCpv=v=>{const c=v<=25?'#dcf0e4':v<=45?'#fdeecb':'#f8d7d7';return `style="background:${c};font-weight:700"`;};
 function tabela(thId,tbId,rows,cols,st){
   const th=document.getElementById(thId), tb=document.getElementById(tbId);
@@ -594,7 +599,7 @@ function aggEntity(rows,de,ate){
   return Object.keys(m).map(name=>{const a=m[name],inv=a[0],imp=a[1],clk=a[2],add=a[3],chk=a[4],vd=a[5],fat=a[6];return {name,inv,imp,clk,add,chk,vd,fat,cpc:clk?inv/clk:0,ctr:imp?clk/imp*100:0,cpv:vd?inv/vd:0,roas:inv?fat/inv:0,ticket:vd?fat/vd:0};});
 }
 const colMetric=[
- ['Investido',o=>`<td>${BRL(o.inv)}</td>`,o=>o.inv],
+ ['Investido',o=>`<td style="font-weight:800;color:var(--ink)">${BRL(o.inv)}</td>`,o=>o.inv],
  ['Cliques',o=>`<td>${fmtN(o.clk)}</td>`,o=>o.clk],
  ['CPC',o=>`<td>${o.clk?BRL2(o.cpc):'—'}</td>`,o=>o.cpc],
  ['CTR',o=>`<td>${pctBR(o.ctr)}</td>`,o=>o.ctr],
@@ -649,7 +654,7 @@ function googleAgg(rows,de,ate){
   return Object.keys(m).map(name=>{const a=m[name],inv=a[0],imp=a[1],clk=a[2],vd=a[3],fat=a[4];return {name,inv,imp,clk,vd,fat,cpc:clk?inv/clk:0,ctr:imp?clk/imp*100:0,cpa:vd?inv/vd:0,roas:inv?fat/inv:0};});
 }
 const gMetric=[
- ['Investido',o=>`<td>${BRL(o.inv)}</td>`,o=>o.inv],
+ ['Investido',o=>`<td style="font-weight:800;color:var(--ink)">${BRL(o.inv)}</td>`,o=>o.inv],
  ['Impr.',o=>`<td>${fmtN(o.imp)}</td>`,o=>o.imp],
  ['Cliques',o=>`<td>${fmtN(o.clk)}</td>`,o=>o.clk],
  ['CPC',o=>`<td>${o.clk?BRL2(o.cpc):'—'}</td>`,o=>o.cpc],
