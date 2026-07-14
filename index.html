@@ -276,12 +276,20 @@
       <h2>Campanhas de Marca <span class="tag">alcance · reconhecimento</span></h2>
       <div class="hint">Avaliadas por <b>alcance, CPM e qualidade do criativo</b> — não por ROAS. <b>Hook Rate</b> = quantos foram fisgados nos primeiros segundos (3s ÷ impressões). <b>Retenção 75%</b> = dos fisgados, quantos assistiram até quase o fim.</div>
     </div></div>
-    <div class="grid kpis kpis7" id="mk-kpis"></div>
     <div class="grid"><div class="card full">
-      <h2>Criativos de marca <span class="tag">qualidade</span></h2>
-      <div class="hint">🎬 vídeo · 🖼️ imagem (imagem não tem hook/retenção). Clique no criativo para abrir o anúncio. Cabeçalho ordena.</div>
-      <div class="tblwrap"><table><thead id="th-brand"></thead><tbody id="tb-brand"></tbody></table></div>
+      <h2>🎯 Alcance <span class="tag" id="alc-tag"></span></h2>
+      <div class="hint" id="alc-sum"></div>
+      <div class="hint">🎬 vídeo · 🖼️ imagem · clique no criativo para abrir o anúncio · cabeçalho ordena.</div>
+      <div class="tblwrap"><table><thead id="th-alc"></thead><tbody id="tb-alc"></tbody></table></div>
     </div></div>
+
+    <div class="grid"><div class="card full">
+      <h2>📣 Reconhecimento <span class="tag" id="rec-tag"></span></h2>
+      <div class="hint" id="rec-sum"></div>
+      <div class="hint">🎬 vídeo · 🖼️ imagem · clique no criativo para abrir o anúncio · cabeçalho ordena.</div>
+      <div class="tblwrap"><table><thead id="th-rec"></thead><tbody id="tb-rec"></tbody></table></div>
+    </div></div>
+
     <div class="note">🎬 <b>Hook Rate</b>: 🟢 ≥30% ótimo · 🟡 15–30% médio · 🔴 &lt;15% fraco (não segura no 1º segundo). <b>Retenção 75%</b>: 🟢 ≥35% · 🟡 20–35% · 🔴 &lt;20%. Imagens não têm essas métricas (só vídeo).</div>
   </div>
 
@@ -384,10 +392,10 @@
   <footer>Cardô Marketing · Dashboard Spitz Pomer · Performance · Planejamento · Plano de Verba</footer>
 </div>
 
-<script src="data.js?v=11"></script>
-<script src="meta_granular.js?v=5"></script>
-<script src="google_granular.js?v=3"></script>
-<script src="brand_granular.js?v=1"></script>
+<script src="data.js?v=12"></script>
+<script src="meta_granular.js?v=6"></script>
+<script src="google_granular.js?v=4"></script>
+<script src="brand_granular.js?v=2"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const BRL2 = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -623,19 +631,12 @@ function renderTabelas(de,ate){
   tabela('th-cria','tb-cria',aggEntity(CRIAD,de,ate),cCria,stCria);
 }
 
-// Aba Marca (Meta Ads Alcance + Reconhecimento) — qualidade de criativo
+// Aba Marca — abas SEPARADAS (Alcance / Reconhecimento), qualidade de criativo
 (function(){
   const bH=v=>v==null?'<span style="color:#c2c2c2">—</span>':`<span class="badge ${v>=30?'b-good':v>=15?'b-mid':'b-bad'}">${v.toFixed(0)}%</span>`;
   const bR=v=>v==null?'<span style="color:#c2c2c2">—</span>':`<span class="badge ${v>=35?'b-good':v>=20?'b-mid':'b-bad'}">${v.toFixed(0)}%</span>`;
-  const objs=BRANDCRIA.map(r=>{const[nm,inv,imp,alc,v3,inter,p25,p75,clk,vp]=r;const vid=v3>0;
+  const toObjs=arr=>arr.map(r=>{const[nm,inv,imp,alc,v3,inter,p25,p75,clk,vp]=r;const vid=v3>0;
     return {nm,inv,imp,alc,v3,inter,vp,vid,cpm:imp?inv/imp*1000:0,freq:alc?imp/alc:0,hook:vid&&imp?v3/imp*100:null,ret:vid&&v3?p75/v3*100:null};});
-  const BT=objs.reduce((a,o)=>{a.inv+=o.inv;a.imp+=o.imp;a.alc+=o.alc;a.v3+=o.v3;a.inter+=o.inter;a.vp+=o.vp;a.vimp+=o.vid?o.imp:0;return a;},{inv:0,imp:0,alc:0,v3:0,inter:0,vp:0,vimp:0});
-  const hookMed=BT.vimp?BT.v3/BT.vimp*100:0;
-  document.getElementById('mk-kpis').innerHTML=[
-    ['Investimento',BRL(BT.inv)],['Impressões',fmtN(BT.imp)],['Alcance',fmtN(BT.alc)],
-    ['Frequência',BT.alc?(BT.imp/BT.alc).toFixed(2).replace('.',','):'—'],['CPM',BRL2(BT.imp?BT.inv/BT.imp*1000:0)],
-    ['Hook médio (vídeo)',hookMed.toFixed(0)+'%'],['Visitas ao perfil',fmtN(BT.vp)]
-  ].map(k=>`<div class="kpi"><div class="lbl">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
   const cB=[
     ['Criativo',o=>`<td class="name">${o.vid?'🎬':'🖼️'} ${BRAND_URL[o.nm]?`<a href="${BRAND_URL[o.nm]}" target="_blank" rel="noopener" style="color:var(--orange-d);text-decoration:underline">${o.nm} ↗</a>`:o.nm}</td>`,o=>o.nm],
     ['Investido',o=>`<td style="font-weight:800;color:var(--ink)">${BRL(o.inv)}</td>`,o=>o.inv],
@@ -648,7 +649,16 @@ function renderTabelas(de,ate){
     ['Interações',o=>`<td>${fmtN(o.inter)}</td>`,o=>o.inter],
     ['Visitas',o=>`<td>${fmtN(o.vp)}</td>`,o=>o.vp]
   ];
-  tabela('th-brand','tb-brand',objs,cB,{i:1,dir:-1});
+  function render(arr,thId,tbId,sumId,tagId){
+    const objs=toObjs(arr);
+    const T=objs.reduce((a,o)=>{a.inv+=o.inv;a.imp+=o.imp;a.alc+=o.alc;a.v3+=o.v3;a.vimp+=o.vid?o.imp:0;return a;},{inv:0,imp:0,alc:0,v3:0,vimp:0});
+    const hookMed=T.vimp?T.v3/T.vimp*100:0, cpm=T.imp?T.inv/T.imp*1000:0, freq=T.alc?T.imp/T.alc:0;
+    document.getElementById(tagId).textContent=objs.length+' criativos';
+    document.getElementById(sumId).innerHTML=`Investimento <b>${BRL(T.inv)}</b> · Impressões <b>${fmtN(T.imp)}</b> · Alcance <b>${fmtN(T.alc)}</b> · CPM <b>${BRL2(cpm)}</b> · Frequência <b>${freq.toFixed(2).replace('.',',')}</b> · Hook médio (vídeo) <b>${hookMed.toFixed(0)}%</b>`;
+    tabela(thId,tbId,objs,cB,{i:1,dir:-1});
+  }
+  render(BRANDALC,'th-alc','tb-alc','alc-sum','alc-tag');
+  render(BRANDREC,'th-rec','tb-rec','rec-sum','rec-tag');
 })();
 
 /* ============ ABA GOOGLE ============ */
