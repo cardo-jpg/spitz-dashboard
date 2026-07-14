@@ -195,7 +195,7 @@
 
     <div class="grid"><div class="card full">
       <h2>Acompanhamento diário do ROAS <span class="tag">geral</span></h2>
-      <div class="hint">Barras: Investimento + Faturamento · linha: ROAS · referências ROAS ideal (5,0x) e mínimo (3,0x).</div>
+      <div class="hint">Barra = faturamento do dia. As linhas tracejadas são a <b>meta de faturamento</b> para ROAS 5x (verde) e 3x (vermelho) — elas acompanham o investimento. Barra acima da verde = ROAS ≥ 5.</div>
       <div class="chart-box" style="height:320px"><canvas id="relChart"></canvas></div>
     </div></div>
 
@@ -243,8 +243,8 @@
     <div class="grid kpis kpis7" id="g-kpis"></div>
 
     <div class="grid"><div class="card full">
-      <h2>Investimento × Faturamento <span class="tag">diário</span></h2>
-      <div class="hint">Barras: Investimento + Faturamento · linha: ROAS</div>
+      <h2>Faturamento × meta diária <span class="tag">ROAS</span></h2>
+      <div class="hint">Barra = faturamento. Linhas tracejadas = meta de faturamento p/ ROAS 5x (verde) e 3x (vermelho), acompanhando o investimento do dia.</div>
       <div class="chart-box" style="height:300px"><canvas id="gChart"></canvas></div>
     </div></div>
 
@@ -552,21 +552,19 @@ function relatorio(){
       <div class="efbar" style="width:${s.w}%;background:${FC2[i]}"><b>${s.v.toLocaleString('pt-BR')}</b><span>${s.n}</span></div>
       <div class="efcost">${s.cost.map(c=>`<div class="pill2">${BRL(c[1])}<small>${c[0]}</small></div>`).join('')}</div>
     </div>`).join('');
-  // ROAS diario: barras empilhadas (Investimento + Faturamento) + linha ROAS + referencias ideal/minimo
+  // Faturamento (barra) x metas de faturamento (inv x5 ideal / x3 minimo) que ACOMPANHAM o investimento
   const labels=md.map(r=>r[0]);
-  const dRoas=md.map(r=>r[1]?+(r[8]/r[1]).toFixed(2):0);
+  const dInv=md.map(r=>r[1]);
   const dC={labels,datasets:[
-    {type:'bar',label:'Investimento',data:md.map(r=>r[1]),backgroundColor:'#1b5540',stack:'s',order:3,yAxisID:'y'},
-    {type:'bar',label:'Faturamento',data:md.map(r=>r[8]),backgroundColor:'#F07A1F',stack:'s',order:3,yAxisID:'y'},
-    {type:'line',label:'ROAS',data:dRoas,borderColor:'#0d2a20',backgroundColor:'#0d2a20',borderWidth:3,tension:.35,pointRadius:3,yAxisID:'y1',order:0},
-    {type:'line',label:'ROAS ideal',data:labels.map(()=>5),borderColor:'#1a7a4c',borderDash:[6,4],borderWidth:1.5,pointRadius:0,yAxisID:'y1',order:1},
-    {type:'line',label:'ROAS mínimo',data:labels.map(()=>3),borderColor:'#c0392b',borderDash:[6,4],borderWidth:1.5,pointRadius:0,yAxisID:'y1',order:1}
+    {type:'bar',label:'Faturamento',data:md.map(r=>r[8]),backgroundColor:'#F07A1F',borderRadius:4,order:3,yAxisID:'y'},
+    {type:'line',label:'Meta (ROAS 5x)',data:dInv.map(v=>+(v*5).toFixed(2)),borderColor:'#1a7a4c',borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.25,order:1,yAxisID:'y'},
+    {type:'line',label:'Mínimo (ROAS 3x)',data:dInv.map(v=>+(v*3).toFixed(2)),borderColor:'#c0392b',borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.25,order:1,yAxisID:'y'},
+    {type:'line',label:'Investimento',data:dInv,borderColor:'#1b5540',backgroundColor:'#1b5540',borderWidth:2,pointRadius:2,tension:.25,order:0,yAxisID:'y'}
   ]};
   const oC={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{position:'top',labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>/ROAS/.test(c.dataset.label)?c.dataset.label+': '+c.parsed.y.toFixed(2)+'x':c.dataset.label+': '+BRL(c.parsed.y)}}},
-    scales:{x:{stacked:true,grid:{display:false},ticks:{maxTicksLimit:16}},
-      y:{stacked:true,position:'left',beginAtZero:true,ticks:{callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'},grid:{color:'#eef2f0'}},
-      y1:{position:'right',beginAtZero:true,grid:{display:false},ticks:{callback:v=>v+'x'}}}};
+    plugins:{legend:{position:'top',labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+BRL(c.parsed.y)}}},
+    scales:{x:{grid:{display:false},ticks:{maxTicksLimit:16}},
+      y:{position:'left',beginAtZero:true,ticks:{callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'},grid:{color:'#eef2f0'}}}};
   if(relC){relC.data=dC;relC.options=oC;relC.update();}else relC=new Chart(document.getElementById('relChart'),{data:dC,options:oC});
   // Tabela diaria
   document.getElementById('rl-tbody').innerHTML=md.map(r=>{const rr=r[1]?r[8]/r[1]:0;const rc=rr>=5?'b-good':rr>=3?'b-mid':'b-bad';return `<tr><td class="name">${r[0]}</td><td>${BRL(r[1])}</td><td>${r[3].toLocaleString('pt-BR')}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td style="color:var(--green);font-weight:700">${BRL(r[8])}</td><td><span class="badge ${rc}">${rr.toFixed(2)}x</span></td></tr>`;}).join('');
@@ -679,14 +677,16 @@ function googleTab(){
   const byDay={};
   rows.forEach(r=>{const a=byDay[r[0]]||(byDay[r[0]]=[0,0]); a[0]+=r[2]; a[1]+=r[6];});
   const days=Object.keys(byDay).sort((a,b)=>{const pa=a.split('/'),pb=b.split('/');return (pa[1]-pb[1])||(pa[0]-pb[0]);});
+  const gi=days.map(d=>byDay[d][0]);
   const dC={labels:days,datasets:[
-    {type:'bar',label:'Investimento',data:days.map(d=>byDay[d][0]),backgroundColor:'#1b5540',stack:'s',order:3,yAxisID:'y'},
-    {type:'bar',label:'Faturamento',data:days.map(d=>byDay[d][1]),backgroundColor:'#F07A1F',stack:'s',order:3,yAxisID:'y'},
-    {type:'line',label:'ROAS',data:days.map(d=>byDay[d][0]?+(byDay[d][1]/byDay[d][0]).toFixed(2):0),borderColor:'#0d2a20',backgroundColor:'#0d2a20',borderWidth:3,tension:.35,pointRadius:3,yAxisID:'y1',order:0}
+    {type:'bar',label:'Faturamento',data:days.map(d=>byDay[d][1]),backgroundColor:'#F07A1F',borderRadius:4,order:3},
+    {type:'line',label:'Meta (ROAS 5x)',data:gi.map(v=>+(v*5).toFixed(2)),borderColor:'#1a7a4c',borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.25,order:1},
+    {type:'line',label:'Mínimo (ROAS 3x)',data:gi.map(v=>+(v*3).toFixed(2)),borderColor:'#c0392b',borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.25,order:1},
+    {type:'line',label:'Investimento',data:gi,borderColor:'#1b5540',backgroundColor:'#1b5540',borderWidth:2,pointRadius:2,tension:.25,order:0}
   ]};
   const oC={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{position:'top',labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>/ROAS/.test(c.dataset.label)?c.dataset.label+': '+c.parsed.y.toFixed(2)+'x':c.dataset.label+': '+BRL(c.parsed.y)}}},
-    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,position:'left',beginAtZero:true,ticks:{callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'},grid:{color:'#eef2f0'}},y1:{position:'right',beginAtZero:true,grid:{display:false},ticks:{callback:v=>v+'x'}}}};
+    plugins:{legend:{position:'top',labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+BRL(c.parsed.y)}}},
+    scales:{x:{grid:{display:false}},y:{position:'left',beginAtZero:true,ticks:{callback:v=>'R$ '+(v/1000).toLocaleString('pt-BR')+'k'},grid:{color:'#eef2f0'}}}};
   if(gChart){gChart.data=dC;gChart.options=oC;gChart.update();}else gChart=new Chart(document.getElementById('gChart'),{data:dC,options:oC});
 }
 gDe.onchange=googleTab; gAte.onchange=googleTab;
