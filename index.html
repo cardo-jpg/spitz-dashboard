@@ -76,14 +76,15 @@
   .efstep .efcost{display:flex;gap:7px;flex-wrap:wrap}
   .efstep .efcost .pill2{background:#f4f7f5;border:1px solid var(--ring);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--green);font-weight:800;white-space:nowrap}
   .efstep .efcost .pill2 small{display:block;font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-  .tblwrap{max-height:470px;overflow:auto;border:1px solid var(--ring);border-radius:12px}
-  .tblwrap table{font-size:12.5px}
-  .tblwrap td,.tblwrap th{white-space:nowrap;padding:11px 14px;border-bottom:1px solid #eef2f0}
-  .tblwrap thead th{position:sticky;top:0;background:var(--card);z-index:1;box-shadow:0 1px 0 var(--ring);font-size:10.5px}
+  .tblwrap{max-height:470px;overflow:auto;border:1px solid var(--ring);border-radius:12px;scrollbar-gutter:stable}
+  .tblwrap table{font-size:12px}
+  .tblwrap td,.tblwrap th{white-space:nowrap;padding:9px 9px;border-bottom:1px solid #eef2f0}
+  .tblwrap td:last-child,.tblwrap th:last-child{padding-right:14px}
+  .tblwrap thead th{position:sticky;top:0;background:var(--card);z-index:1;box-shadow:0 1px 0 var(--ring);font-size:10px}
   .tblwrap tbody tr:nth-child(even){background:#faf8ef}
   .tblwrap tbody tr:hover{background:#edf4ef}
   .tblwrap tbody td{color:#6d7f75}
-  .tblwrap tbody td.name{color:var(--green);font-weight:700;white-space:normal;min-width:180px}
+  .tblwrap tbody td.name{color:var(--green);font-weight:700;white-space:normal;min-width:150px;max-width:230px}
   footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px;padding:16px}
   .note{background:#fff;border:1px dashed var(--ring);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--muted);margin-top:16px}
   .full{grid-column:1/-1}
