@@ -124,16 +124,19 @@
     <div class="tab" data-t="plan">💰 Plano de Verba</div>
   </div>
 
-  <!-- ================= PERFORMANCE ================= -->
+  <!-- ================= ANÁLISE (histórico 2025 · filtrável) ================= -->
   <div class="pane" id="perf">
-    <div class="grid kpis">
-      <div class="kpi"><div class="lbl">Investimento total</div><div class="val">R$ 366,6 mil</div></div>
-      <div class="kpi"><div class="lbl">Faturamento</div><div class="val orange">R$ 1,51 mi</div></div>
-      <div class="kpi"><div class="lbl">ROAS (Meta)</div><div class="val">6,08x</div></div>
-      <div class="kpi"><div class="lbl">Vendas</div><div class="val">8.482</div></div>
-      <div class="kpi"><div class="lbl">Ticket médio</div><div class="val">R$ 178</div></div>
-      <div class="kpi"><div class="lbl">CPA (Meta)</div><div class="val">R$ 29</div></div>
-    </div>
+    <div class="grid"><div class="card full">
+      <h2>Análise do histórico <span class="tag">2025</span></h2>
+      <div class="hint">Base de dados 26/03–26/12/2025. Filtre o período — todos os indicadores, gráficos e tabelas recalculam.</div>
+      <div class="controls">
+        <div class="ctl"><label>De</label><input type="date" id="an-de"></div>
+        <div class="ctl"><label>Até</label><input type="date" id="an-ate"></div>
+        <button class="btn ghost" id="an-tudo">↺ Período todo</button>
+      </div>
+    </div></div>
+
+    <div class="grid kpis" id="an-kpis"></div>
 
     <div class="grid cols">
       <div class="card">
@@ -141,10 +144,7 @@
         <div class="hint">Distribuição do investimento entre plataformas</div>
         <div class="split">
           <div class="chart-box" style="height:200px;width:200px;flex:0 0 200px"><canvas id="splitChart"></canvas></div>
-          <div class="legend">
-            <div class="lgrow"><div class="l"><span class="sw" style="background:#1b5540"></span>Meta Ads</div><div><b>R$ 247,8k</b> · 68%</div></div>
-            <div class="lgrow"><div class="l"><span class="sw" style="background:#F07A1F"></span>Google Ads</div><div><b>R$ 118,8k</b> · 32%</div></div>
-          </div>
+          <div class="legend" id="an-legenda"></div>
         </div>
       </div>
       <div class="card">
@@ -158,7 +158,7 @@
     <div class="grid">
       <div class="card full">
         <h2>Evolução mensal <span class="tag">sazonalidade</span></h2>
-        <div class="hint">Faturamento (barras) e ROAS (linha). Pico em julho (férias) · vales em mai/jun e dez.</div>
+        <div class="hint">Faturamento (barras) e ROAS (linha). Mostra só os meses dentro do período filtrado.</div>
         <div class="chart-box"><canvas id="monthChart"></canvas></div>
       </div>
     </div>
@@ -166,7 +166,7 @@
     <div class="grid cols">
       <div class="card">
         <h2>Funil Meta <span class="tag">jornada</span></h2>
-        <div class="hint">Do clique à venda (impressões: 23,7 mi)</div>
+        <div class="hint" id="an-funil-hint">Do clique à venda</div>
         <div class="funnel" id="funnel"></div>
       </div>
       <div class="card">
@@ -176,7 +176,7 @@
       </div>
     </div>
 
-    <div class="note">⚠️ <b>Notas:</b> ROAS/Faturamento referem-se ao e-commerce rastreado (Meta). O Google não registrava "valor de conversão" no período → mostramos CPA/conversões. Vendas Meta e Google se sobrepõem em atribuição (não somar). Dados: 26/03–26/12/2025.</div>
+    <div class="note">⚠️ <b>Notas:</b> ROAS/Faturamento = e-commerce Meta. Google mostra CPA/conversões (não tinha valor de conversão em 2025). Vendas Meta e Google se sobrepõem (não somar). Base: 26/03–26/12/2025.</div>
   </div>
 
   <!-- ================= DASHBOARD META (ao vivo) ================= -->
@@ -405,6 +405,7 @@
 <script src="meta_granular.js?v=7"></script>
 <script src="google_granular.js?v=5"></script>
 <script src="brand_granular.js?v=4"></script>
+<script src="hist2025.js?v=1"></script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const BRL2 = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -417,29 +418,61 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   t.classList.add('active'); document.getElementById(t.dataset.t).classList.add('active');
 });
 
-/* ============ PERFORMANCE ============ */
-const g = [
-  {n:'Termos da Marca',inv:75675,v:5761,cpa:13.14,ctr:31.6,cls:'b-good'},
-  {n:'Termos do Nicho',inv:31184,v:1388,cpa:22.47,ctr:12.9,cls:'b-good'},
-  {n:'Termos Concorrentes',inv:7248,v:237,cpa:30.58,ctr:10.2,cls:'b-mid'},
-  {n:'Blog Pomerode',inv:2821,v:177,cpa:15.94,ctr:13.4,cls:'b-good'},
-  {n:'Blog',inv:1597,v:31,cpa:51.52,ctr:13.1,cls:'b-bad'},
-  {n:'Blog_V',inv:288,v:4,cpa:72.00,ctr:9.8,cls:'b-bad'},
-];
-document.getElementById('gtable').innerHTML=g.map(r=>`<tr><td class="name">${r.n}</td><td>${BRL(r.inv)}</td><td>${r.v.toLocaleString('pt-BR')}</td><td><span class="badge ${r.cls}">R$ ${r.cpa.toFixed(2)}</span></td><td>${r.ctr}%</td></tr>`).join('');
-new Chart(document.getElementById('splitChart'),{type:'doughnut',data:{labels:['Meta','Google'],datasets:[{data:[247779,118813],backgroundColor:['#1b5540','#F07A1F'],borderWidth:0}]},options:{cutout:'68%',plugins:{legend:{display:false}}}});
-const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const hMes=['Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-new Chart(document.getElementById('monthChart'),{data:{labels:hMes,datasets:[
-  {type:'bar',label:'Faturamento',data:[36881,214581,107201,88838,390246,109693,96953,228247,199667,34631],backgroundColor:'#1b5540',borderRadius:6,yAxisID:'y',order:1},
-  {type:'line',label:'ROAS',data:[6.06,7.20,3.45,3.68,9.53,5.71,4.41,7.14,7.78,2.04],borderColor:'#F07A1F',backgroundColor:'#F07A1F',borderWidth:3,tension:.35,pointRadius:4,yAxisID:'y1',order:0}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{y:{position:'left',ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'x'}}}}});
-const GCOL=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f','#b45f0a'];
-new Chart(document.getElementById('gbarChart'),{type:'bar',data:{labels:g.map(x=>x.n),datasets:[{data:g.map(x=>x.inv),backgroundColor:GCOL,borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y:{grid:{display:false}}}}});
-const FCOL=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f'];
-const steps=[{n:'Cliques',v:241358},{n:'Visitas site',v:98574},{n:'Add carrinho',v:47150},{n:'Checkout',v:4031},{n:'Vendas',v:8482}];
-const mx=steps[0].v;
-document.getElementById('funnel').innerHTML=steps.map((s,i)=>{const w=Math.max(8,(s.v/mx)*100);const c=i>0?((s.v/steps[i-1].v)*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s.n}</div><div class="fbar" style="width:${w}%;background:${FCOL[i]}">${s.v.toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
+/* ============ ANÁLISE (histórico 2025 · filtrável) ============ */
+const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; // usado tb pelo Plano de Verba
+const anDe=document.getElementById('an-de'), anAte=document.getElementById('an-ate');
+const hISO=dm=>{const[d,m]=dm.split('/');return `2025-${m}-${d}`;};
+const anIso=HISTM.map(r=>hISO(r[0])).sort();
+const anMin=anIso[0], anMax=anIso[anIso.length-1];
+[anDe,anAte].forEach(i=>{i.min=anMin;i.max=anMax;}); anDe.value=anMin; anAte.value=anMax;
+const GNOME={'Marca':'Termos da Marca','Nicho':'Termos do Nicho','Concorrentes':'Termos Concorrentes','Blog Pomerode':'Blog Pomerode','Blog':'Blog','Blog_V':'Blog_V'};
+const GC6=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f','#b45f0a'];
+const FC5=['#12402f','#1b5540','#2e7d5b','#e08a2a','#d9670f'];
+const bg=n=>n>=1e6?'R$ '+(n/1e6).toFixed(2).replace('.',',')+' mi':n>=1000?'R$ '+(n/1000).toFixed(1).replace('.',',')+' mil':BRL(n);
+let splitChart, monthChart, gbarChart;
+function analise(){
+  const de=anDe.value||anMin, ate=anAte.value||anMax;
+  const md=HISTM.filter(r=>{const i=hISO(r[0]);return i>=de&&i<=ate;});
+  const gd=HISTG.filter(r=>{const i=hISO(r[0]);return i>=de&&i<=ate;});
+  const S=md.reduce((a,r)=>{a.inv+=r[1];a.imp+=r[2];a.clk+=r[3];a.vis+=r[4];a.atc+=r[5];a.chk+=r[6];a.vd+=r[7];a.fat+=r[8];return a;},{inv:0,imp:0,clk:0,vis:0,atc:0,chk:0,vd:0,fat:0});
+  const gc={}; let gInv=0;
+  gd.forEach(r=>{const a=gc[r[1]]||(gc[r[1]]=[0,0,0,0]); a[0]+=r[2];a[1]+=r[3];a[2]+=r[4];a[3]+=r[5]; gInv+=r[2];});
+  const roas=S.inv?S.fat/S.inv:0, cpa=S.vd?S.inv/S.vd:0, ticket=S.vd?S.fat/S.vd:0, tt=S.inv+gInv;
+  // KPIs
+  document.getElementById('an-kpis').innerHTML=[
+    ['Investimento total',bg(tt)],['Faturamento',bg(S.fat)],['ROAS (Meta)',roas.toFixed(2)+'x'],
+    ['Vendas',S.vd.toLocaleString('pt-BR')],['Ticket médio',BRL(ticket)],['CPA (Meta)',BRL2(cpa)]
+  ].map(k=>`<div class="kpi"><div class="lbl">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
+  // Donut + legenda
+  const dg={labels:['Meta','Google'],datasets:[{data:[S.inv,gInv],backgroundColor:['#1b5540','#F07A1F'],borderWidth:0}]};
+  if(splitChart){splitChart.data=dg;splitChart.update();}else splitChart=new Chart(document.getElementById('splitChart'),{type:'doughnut',data:dg,options:{cutout:'68%',plugins:{legend:{display:false}}}});
+  document.getElementById('an-legenda').innerHTML=
+    `<div class="lgrow"><div class="l"><span class="sw" style="background:#1b5540"></span>Meta Ads</div><div><b>${bg(S.inv)}</b> · ${tt?Math.round(S.inv/tt*100):0}%</div></div>`+
+    `<div class="lgrow"><div class="l"><span class="sw" style="background:#F07A1F"></span>Google Ads</div><div><b>${bg(gInv)}</b> · ${tt?Math.round(gInv/tt*100):0}%</div></div>`;
+  // Google por campanha (tabela + barras)
+  const ordem=['Marca','Nicho','Concorrentes','Blog Pomerode','Blog','Blog_V'];
+  const gEnt=ordem.filter(c=>gc[c]).map(c=>[c,gc[c]]);
+  document.getElementById('gtable').innerHTML=gEnt.map(([c,a])=>{const cpaG=a[3]?a[0]/a[3]:0,ctr=a[1]?a[2]/a[1]*100:0;const cl=cpaG<=20?'b-good':cpaG<=35?'b-mid':'b-bad';return `<tr><td class="name">${GNOME[c]}</td><td>${BRL(a[0])}</td><td>${a[3].toLocaleString('pt-BR')}</td><td><span class="badge ${cl}">${BRL2(cpaG)}</span></td><td>${ctr.toFixed(1)}%</td></tr>`;}).join('');
+  const gdat={labels:gEnt.map(([c])=>GNOME[c]),datasets:[{data:gEnt.map(([,a])=>a[0]),backgroundColor:GC6,borderRadius:6}]};
+  if(gbarChart){gbarChart.data=gdat;gbarChart.update();}else gbarChart=new Chart(document.getElementById('gbarChart'),{type:'bar',data:gdat,options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y:{grid:{display:false}}}}});
+  // Evolução mensal (só meses no range)
+  const byM={};
+  md.forEach(r=>{const m=+r[0].slice(3,5); const a=byM[m]||(byM[m]=[0,0]); a[0]+=r[1]; a[1]+=r[8];});
+  const mk=Object.keys(byM).map(Number).sort((a,b)=>a-b);
+  const dc={labels:mk.map(m=>meses[m-1]),datasets:[
+    {type:'bar',label:'Faturamento',data:mk.map(m=>byM[m][1]),backgroundColor:'#1b5540',borderRadius:6,yAxisID:'y',order:1},
+    {type:'line',label:'ROAS',data:mk.map(m=>byM[m][0]?+(byM[m][1]/byM[m][0]).toFixed(2):0),borderColor:'#F07A1F',backgroundColor:'#F07A1F',borderWidth:3,tension:.35,pointRadius:4,yAxisID:'y1',order:0}]};
+  const oc={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12}}},scales:{y:{position:'left',ticks:{callback:v=>'R$ '+(v/1000)+'k'},grid:{color:'#eef2f0'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'x'}}}};
+  if(monthChart){monthChart.data=dc;monthChart.options=oc;monthChart.update();}else monthChart=new Chart(document.getElementById('monthChart'),{data:dc,options:oc});
+  // Funil Meta
+  const st=[['Cliques',S.clk],['Visitas site',S.vis],['Add carrinho',S.atc],['Checkout',S.chk],['Vendas',S.vd]];
+  const mx=st[0][1]||1;
+  document.getElementById('an-funil-hint').textContent=`Do clique à venda (impressões: ${(S.imp/1e6).toFixed(1).replace('.',',')} mi)`;
+  document.getElementById('funnel').innerHTML=st.map((s,i)=>{const w=Math.max(8,s[1]/mx*100);const c=i>0&&st[i-1][1]?((s[1]/st[i-1][1])*100).toFixed(1)+'%':'—';return `<div class="fstep"><div class="fname">${s[0]}</div><div class="fbar" style="width:${w}%;background:${FC5[i]}">${s[1].toLocaleString('pt-BR')}</div><div class="fmeta">${c}</div></div>`;}).join('');
+}
+anDe.onchange=analise; anAte.onchange=analise;
+document.getElementById('an-tudo').onclick=()=>{anDe.value=anMin;anAte.value=anMax;analise();};
+analise();
 
 /* ============ PLANO DE VERBA (editável) ============ */
 const LS='spitz_plano_v1';
