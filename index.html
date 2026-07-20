@@ -401,11 +401,9 @@
   <footer>Cardô Marketing · Dashboard Spitz Pomer · Performance · Planejamento · Plano de Verba</footer>
 </div>
 
-<script src="data.js?v=14"></script>
-<script src="meta_granular.js?v=8"></script>
-<script src="google_granular.js?v=6"></script>
-<script src="brand_granular.js?v=5"></script>
-<script src="hist2025.js?v=1"></script>
+<script>/* carrega os dados SEMPRE frescos (cache-bust por timestamp) — a dash reflete o ultimo commit sem precisar bump de versao */
+['data.js','meta_granular.js','google_granular.js','brand_granular.js','hist2025.js'].forEach(function(f){document.write('<script src="'+f+'?t='+Date.now()+'"><\/'+'script>');});
+</script>
 <script>
 const BRL = n => 'R$ '+Math.round(n).toLocaleString('pt-BR');
 const BRL2 = n => 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
